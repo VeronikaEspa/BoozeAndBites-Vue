@@ -11,17 +11,14 @@ const props = defineProps({
 const emit = defineEmits(["addToCart"]);
 
 const handleAddToCart = () => {
-  console.log("Agregar producto:", props.id);
   emit("addToCart", props.id);
 };
 </script>
 
 <template>
   <div class="bg-gray-900 text-white rounded-xl shadow-lg w-60 p-4 transition-transform transform hover:scale-105">
-    <!-- Imagen del producto -->
     <div class="relative">
       <img :src="img" alt="Imagen del producto" class="w-full h-36 object-cover rounded-lg" />
-      <!-- Icono de disponibilidad -->
       <span class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded-md flex items-center"
             :class="available ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
         <svg class="w-4 h-4 mr-1" viewBox="0 0 512 512" fill="currentColor">
@@ -32,7 +29,6 @@ const handleAddToCart = () => {
       </span>
     </div>
 
-    <!-- Información del producto -->
     <div class="mt-3 text-center">
       <h3 class="text-lg font-semibold text-blue-400 truncate">{{ name }}</h3>
       <p class="text-gray-300 text-sm mt-1 flex items-center justify-center">
@@ -44,7 +40,6 @@ const handleAddToCart = () => {
       <p class="text-xs text-gray-400 mt-1">Stock: {{ stock }}</p>
     </div>
 
-    <!-- Botón de añadir al carrito -->
     <div class="mt-3 flex justify-center">
       <button 
         class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded-lg flex items-center transition disabled:opacity-50 disabled:cursor-not-allowed"

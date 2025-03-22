@@ -14,31 +14,40 @@ const state = reactive({
   totalCartPrice: "0.00"
 });
 
-// Cargar productos desde la API al montar el componente
 onMounted(() => {
   fetch('https://fakestoreapi.com/products')
     .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error('Error de red');
       return response.json();
     })
-    .then(data => {
-      state.listProducts = data.map(product => {
-        const stock = product.rating ? product.rating.count : 0;
-        return {
-          id: product.id,
-          name: product.title,
-          price: product.price,
-          initialStock: stock,         // Stock original
-          stock: stock,                // Stock actual
-          available: stock > 0,        // Disponible si hay stock
-          img: product.image
-        };
-      });
-    })
-    .catch(error => console.error('Error:', error));
 
-  // Cargar carrito desde localStorage, si existe
-  const storedCart = localStorage.getItem("shopping-cart");
+    .then(data => {
+    const productosConWatch = data.map(product => {
+      const stock = product.rating ? product.rating.count : 0;
+      const prod = {
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        initialStock: stock,
+        stock: stock,
+        available: stock > 0,
+        img: product.image
+      };
+
+      watch(
+        () => prod.stock,
+        (nuevoStock) => {
+          prod.available = nuevoStock > 0;
+        }
+      );
+
+      return prod;
+    });
+
+    state.listProducts = productosConWatch;
+  });
+
+  const storedCart = localStorage.getItem("booze-bites");
   if (storedCart) {
     try {
       state.cart = JSON.parse(storedCart);
@@ -47,21 +56,6 @@ onMounted(() => {
     }
   }
 });
-
-// Watch para actualizar filteredProducts cuando cambie filterOption o listProducts
-watch(
-  [() => state.filterOption, () => state.listProducts],
-  ([newFilter, newProducts]) => {
-    if (newFilter === "Todos") {
-      state.filteredProducts = newProducts;
-    } else {
-      state.filteredProducts = newProducts.filter(product =>
-        newFilter === "Disponibles" ? product.available : !product.available
-      );
-    }
-  },
-  { deep: true, immediate: true }
-);
 
 // Watch para calcular totalCartPrice cuando cambie el carrito
 watch(
@@ -74,15 +68,9 @@ watch(
     state.totalCartPrice = total.toFixed(2);
   },
   { deep: true, immediate: true }
-);
-
-// Función para actualizar la disponibilidad de un producto
-const updateAvailability = (product) => {
-  product.available = product.stock > 0;
-};
+)
 
 const addToCart = (productId) => {
-  console.log("Producto a agregar:", productId);
   const product = state.listProducts.find(p => p.id === productId);
   if (!product) return;
   
@@ -102,10 +90,8 @@ const addToCart = (productId) => {
     state.cart.push({ ...product, quantity: 1 });
   }
   
-  product.stock = product.initialStock - newQuantity;
-  updateAvailability(product);
-  
-  localStorage.setItem("shopping-cart", JSON.stringify(state.cart));
+  product.stock--;
+  localStorage.setItem("booze-bites", JSON.stringify(state.cart));
 };
 
 const increaseQuantity = (cartItem) => {
@@ -118,32 +104,28 @@ const increaseQuantity = (cartItem) => {
   }
   
   cartItem.quantity = newQuantity;
-  product.stock = product.initialStock - newQuantity;
-  updateAvailability(product);
-  
-  localStorage.setItem("shopping-cart", JSON.stringify(state.cart));
+  product.stock--;
+  localStorage.setItem("booze-bites", JSON.stringify(state.cart));
 };
 
 const decreaseQuantity = (cartItem) => {
   const product = state.listProducts.find(p => p.id === cartItem.id);
   if (cartItem.quantity > 1) {
     cartItem.quantity--;
-    product.stock = product.initialStock - cartItem.quantity;
-    updateAvailability(product);
+    product.stock++;
   } else {
     removeFromCart(cartItem);
   }
-  localStorage.setItem("shopping-cart", JSON.stringify(state.cart));
+  localStorage.setItem("booze-bites", JSON.stringify(state.cart));
 };
 
 const removeFromCart = (cartItem) => {
   const product = state.listProducts.find(p => p.id === cartItem.id);
   if (product) {
     product.stock = product.initialStock;
-    updateAvailability(product);
   }
   state.cart = state.cart.filter(item => item.id !== cartItem.id);
-  localStorage.setItem("shopping-cart", JSON.stringify(state.cart));
+  localStorage.setItem("booze-bites", JSON.stringify(state.cart));
 };
 
 const toggleCart = () => {
@@ -155,7 +137,7 @@ const orderDelivery = () => {
   
   state.showPopup = true;
   state.cart = [];
-  localStorage.setItem("shopping-cart", JSON.stringify(state.cart));
+  localStorage.setItem("booze-bites", JSON.stringify(state.cart));
   setTimeout(() => {
     state.showPopup = false;
     state.cartOpen = false;
@@ -165,7 +147,7 @@ const orderDelivery = () => {
 
 <template>
   <Header :cartCount="state.cart.length" @toggle-cart="toggleCart" />
-  <ProductList :products="state.filteredProducts" @add-to-cart="addToCart" />
+  <ProductList :products="state.listProducts" @add-to-cart="addToCart" />
   <ShoppingCart 
     :cart="state.cart" 
     :totalCartPrice="state.totalCartPrice" 
@@ -177,7 +159,6 @@ const orderDelivery = () => {
     @order-delivery="orderDelivery"
   />
   
-  <!-- Popup de Compra Realizada -->
   <transition name="fade">
     <div v-if="state.showPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-80 text-center">
