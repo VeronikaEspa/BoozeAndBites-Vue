@@ -26,11 +26,11 @@ jobs:
         run: |
           docker build -t ghcr.io/veronikaespa/boozeandbites-vue:latest .
           docker push ghcr.io/veronikaespa/boozeandbites-vue:latest
-
+        
       - name: Set up kubeconfig for deployment
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_LOCAL }}" > kubeconfig && export KUBECONFIG=$PWD/kubeconfig
+          echo "${{ secrets.KUBECONFIG_LOCAL }}" | base64 -d > ~/.kube/config
 
       - name: Deploy via kubectl
         run: kubectl apply -k https://github.com/VeronikaEspa/devops-k8s/overlays/boozeandbites-dev
