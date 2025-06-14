@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.15",
+    "graphql-request": "^7.1.2",
     "tailwindcss": "^4.0.15",
     "vue": "^3.5.13"
   },

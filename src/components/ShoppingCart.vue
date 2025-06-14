@@ -19,7 +19,7 @@ const props = defineProps({
       <li v-for="item in cart" :key="item.id" class="flex items-center bg-gray-800 p-3 rounded-lg shadow">
         <img :src="item.img" alt="Producto" class="w-14 h-14 object-cover rounded-lg">
         <div class="ml-4 flex-1">
-          <h3 class="text-sm text-gray-300 font-medium">{{ item.name }}</h3>
+          <h3 class="text-sm text-gray-300 font-medium">{{ item.nombre }}</h3>
           <p class="text-blue-400 font-bold">${{ item.price }}</p>
           <div class="flex items-center space-x-2 mt-1">
             <button class="bg-gray-700 text-gray-300 px-2 py-1 rounded hover:bg-gray-600 transition"
